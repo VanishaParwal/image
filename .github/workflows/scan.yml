@@ -1,0 +1,42 @@
+name: AccuKnox Container Scan Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  container-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 1. Build your specific image from the local Dockerfile
+      - name: Build local image
+        run: |
+          docker build -t vanisha-image:latest .
+
+      - name: Run AccuKnox Container Scanner
+        uses: Vickydew1/container-scan-action@Docker
+        with:
+          accuknox_token: ${{ secrets.ACCUKNOX_TOKEN }}
+          accuknox_label: ${{ secrets.ACCUKNOX_LABEL }}
+          accuknox_endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}
+          
+          # Use the LOCAL name you just defined above
+          image_name: "vanisha-image"
+          tag: "latest"
+          
+          # "." points to the LOCAL Dockerfile in your repository root
+          dockerfile_context: "."
+          
+          severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+          soft_fail: true
+          upload_results: true
+          generate_sbom: true
+          project_name: "vanisha-test"
